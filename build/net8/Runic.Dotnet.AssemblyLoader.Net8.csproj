@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Runic.Dotnet.AssemblyLoader</AssemblyName>
+    <RootNamespace>Runic.Dotnet.AssemblyLoader</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Runic.Dotnet.Assembly" Version="1.0.11" />
+    <PackageReference Include="Runic.FileFormats.PortableExecutable" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\AssemblyLoader.cs">
+      <Link>AssemblyLoader.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
