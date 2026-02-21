@@ -78,6 +78,8 @@ namespace Runic.Dotnet
             public Runic.Dotnet.Assembly.MetadataTable.ExportedTypeTable? ExportedTypeTable { get { return _exportedTypeTable; } }
             Runic.Dotnet.Assembly.MetadataTable.FieldRVATable? _fieldRVATable;
             public Runic.Dotnet.Assembly.MetadataTable.FieldRVATable? FieldRVATable { get { return _fieldRVATable; } }
+            Runic.Dotnet.Assembly.MetadataTable.NestedClassTable? _nestedClassTable;
+            public Runic.Dotnet.Assembly.MetadataTable.NestedClassTable? NestedClassTable { get { return _nestedClassTable; } }
 #else
             Runic.Dotnet.Assembly.MetadataTable.MethodDefTable _methodDefTable;
             public Runic.Dotnet.Assembly.MetadataTable.MethodDefTable MethodDefTable { get { return _methodDefTable; } }
@@ -129,6 +131,8 @@ namespace Runic.Dotnet
             public Runic.Dotnet.Assembly.MetadataTable.ExportedTypeTable ExportedTypeTable { get { return _exportedTypeTable; } }
             Runic.Dotnet.Assembly.MetadataTable.FieldRVATable _fieldRVATable;
             public Runic.Dotnet.Assembly.MetadataTable.FieldRVATable FieldRVATable { get { return _fieldRVATable; } }
+            Runic.Dotnet.Assembly.MetadataTable.NestedClassTable _nestedClassTable;
+            public Runic.Dotnet.Assembly.MetadataTable.NestedClassTable NestedClassTable { get { return _nestedClassTable; } }
 #endif
             internal Assembly(PortableExecutable input)
             {
@@ -179,6 +183,7 @@ namespace Runic.Dotnet
                                         case Runic.Dotnet.Assembly.MetadataTable.DeclSecurityTable declSecurityTable: _declSecurityTable = declSecurityTable; break;
                                         case Runic.Dotnet.Assembly.MetadataTable.ExportedTypeTable exportedTypeTable: _exportedTypeTable = exportedTypeTable; break;
                                         case Runic.Dotnet.Assembly.MetadataTable.FieldRVATable fieldRVATable: _fieldRVATable = fieldRVATable; break;
+                                        case Runic.Dotnet.Assembly.MetadataTable.NestedClassTable nestedClassTable: _nestedClassTable = nestedClassTable; break;
                                     }
                                 }
                             }
@@ -244,6 +249,7 @@ namespace Runic.Dotnet
             public byte[] ReadMethodHeader(uint rva)
 #endif
             {
+                if (rva == 0) { return null; }
                 byte[] tinyMethodHeader = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva, 1);
                 if (tinyMethodHeader == null || tinyMethodHeader.Length == 0) { return null; }
                 bool useTinyMethodHeader = (tinyMethodHeader[0] & 0x3) == 0x2;
@@ -258,7 +264,21 @@ namespace Runic.Dotnet
 #endif
             {
                 if (methodDef == null) { return null; }
+                if (methodDef.MethodBodyRelativeVirtualAddress == 0) { return null; }
                 return ReadMethodHeader(methodDef.MethodBodyRelativeVirtualAddress);
+            }
+#if NET6_0_OR_GREATER
+            public void ReadMethodHeaderAndBody(Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MethodDefTableRow methodDef, out byte[]? methodHeader, out byte[]? methodBody)
+#else
+            public void ReadMethodHeaderAndBody(Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MethodDefTableRow methodDef, out byte[] methodHeader, out byte[] methodBody)
+#endif
+            {
+                if (methodDef == null) { methodHeader = null; methodBody = null; return; }
+                if (methodDef.MethodBodyRelativeVirtualAddress == 0) { methodHeader = null; methodBody = null; return; }
+                methodHeader = ReadMethodHeader(methodDef.MethodBodyRelativeVirtualAddress);
+                int ilLength = 0;
+                Dotnet.Assembly.MethodHeader.Decode(methodHeader, out ilLength, out _, out _, out _, out _);
+                methodBody = ReadByteArray(methodDef.MethodBodyRelativeVirtualAddress + (uint)methodHeader.Length, (uint)ilLength);
             }
 
 #if NET6_0_OR_GREATER
