@@ -46,14 +46,14 @@ static string CreateNuspec(string packageId, string version, string description,
     stringBuilder.AppendLine("    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>");
     stringBuilder.AppendLine("    <icon>runic_logo.png</icon>");
     stringBuilder.AppendLine("    <dependencies>");
-    stringBuilder.AppendLine("        <dependency id=\"Runic.Dotnet.Assembly\" version=\"[1.0.11,)\" />");
+    stringBuilder.AppendLine("        <dependency id=\"Runic.Dotnet.Assembly\" version=\"[1.0.18,)\" />");
     stringBuilder.AppendLine("        <dependency id=\"Runic.FileFormats.PortableExecutable\" version=\"[1.0.2,)\" />");
     stringBuilder.AppendLine("    </dependencies>");
     stringBuilder.AppendLine("  </metadata>");
     stringBuilder.AppendLine("</package>");
     return stringBuilder.ToString();
 }
-string version = "1.0.1";
+string version = "1.0.2";
 string currentExeDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(System.Environment.ProcessPath));
 string rootDir = System.IO.Path.GetFullPath(currentExeDir + "/../../../../..");
 string binDir = System.IO.Path.GetFullPath(rootDir + "/bin");

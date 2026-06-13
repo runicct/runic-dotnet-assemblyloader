@@ -13,6 +13,15 @@ namespace Runic.Dotnet
     {
         public class Assembly
         {
+            uint _nativeEntryPointRva;
+            public uint NativeEntryPointRva { get { return _nativeEntryPointRva; } }
+#if NET6_0_OR_GREATER
+            Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MetadataTableRow? _managedEntryPoint;
+            public Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MetadataTableRow? ManagedEntryPoint { get { return _managedEntryPoint; } }
+#else
+            Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MethodDefTableRow _managedEntryPoint;
+            public Runic.Dotnet.Assembly.MetadataTable.MethodDefTable.MethodDefTableRow ManagedEntryPoint { get { return _managedEntryPoint; } }
+#endif
             PortableExecutable _portableExecutable;
             PortableExecutable.Directories.CLIHeader _cliHeader;
 
@@ -80,6 +89,10 @@ namespace Runic.Dotnet
             public Runic.Dotnet.Assembly.MetadataTable.FieldRVATable? FieldRVATable { get { return _fieldRVATable; } }
             Runic.Dotnet.Assembly.MetadataTable.NestedClassTable? _nestedClassTable;
             public Runic.Dotnet.Assembly.MetadataTable.NestedClassTable? NestedClassTable { get { return _nestedClassTable; } }
+            Runic.Dotnet.Assembly.MetadataTable.GenericParamTable? _genericParamTable;
+            public Runic.Dotnet.Assembly.MetadataTable.GenericParamTable? GenericParamTable { get { return _genericParamTable; } }
+            Runic.Dotnet.Assembly.MetadataTable.GenericParamConstraintTable? _genericParamConstraintTable;
+            public Runic.Dotnet.Assembly.MetadataTable.GenericParamConstraintTable? GenericParamConstraintTable { get { return _genericParamConstraintTable; } }
 #else
             Runic.Dotnet.Assembly.MetadataTable.MethodDefTable _methodDefTable;
             public Runic.Dotnet.Assembly.MetadataTable.MethodDefTable MethodDefTable { get { return _methodDefTable; } }
@@ -133,6 +146,10 @@ namespace Runic.Dotnet
             public Runic.Dotnet.Assembly.MetadataTable.FieldRVATable FieldRVATable { get { return _fieldRVATable; } }
             Runic.Dotnet.Assembly.MetadataTable.NestedClassTable _nestedClassTable;
             public Runic.Dotnet.Assembly.MetadataTable.NestedClassTable NestedClassTable { get { return _nestedClassTable; } }
+            Runic.Dotnet.Assembly.MetadataTable.GenericParamTable _genericParamTable;
+            public Runic.Dotnet.Assembly.MetadataTable.GenericParamTable GenericParamTable { get { return _genericParamTable; } }
+            Runic.Dotnet.Assembly.MetadataTable.GenericParamConstraintTable _genericParamConstraintTable;
+            public Runic.Dotnet.Assembly.MetadataTable.GenericParamConstraintTable GenericParamConstraintTable { get { return _genericParamConstraintTable; } }
 #endif
             internal Assembly(PortableExecutable input)
             {
@@ -184,12 +201,34 @@ namespace Runic.Dotnet
                                         case Runic.Dotnet.Assembly.MetadataTable.ExportedTypeTable exportedTypeTable: _exportedTypeTable = exportedTypeTable; break;
                                         case Runic.Dotnet.Assembly.MetadataTable.FieldRVATable fieldRVATable: _fieldRVATable = fieldRVATable; break;
                                         case Runic.Dotnet.Assembly.MetadataTable.NestedClassTable nestedClassTable: _nestedClassTable = nestedClassTable; break;
+                                        case Runic.Dotnet.Assembly.MetadataTable.GenericParamTable genericParamTable: _genericParamTable = genericParamTable; break;
+                                        case Runic.Dotnet.Assembly.MetadataTable.GenericParamConstraintTable genericParamConstraintTable: _genericParamConstraintTable = genericParamConstraintTable; break;
                                     }
                                 }
                             }
                             if (stream.Name == "#US")
                             {
                                 _USHeap = new Runic.Dotnet.Assembly.Heap.StringHeap(true, stream.RelativeVirtualAddress, stream.Size);
+                            }
+                        }
+                    }
+                }
+                _nativeEntryPointRva = 0;
+                _managedEntryPoint = null;
+                if (_cliHeader != null)
+                {
+                    if ((_cliHeader.Flags & CLIHeader.CorFlags.NativeEntryPoint) != 0) { _nativeEntryPointRva = _cliHeader.EntryPoint; }
+                    else
+                    {
+                        if ((_cliHeader.EntryPoint & 0xFF000000) == 0x06000000)
+                        {
+                            if (_methodDefTable != null)
+                            {
+                                uint methodDefTableIndex = _cliHeader.EntryPoint & 0xFFFFFF;
+                                if (methodDefTableIndex > 0 && methodDefTableIndex <= _methodDefTable.Rows)
+                                {
+                                    _managedEntryPoint = _methodDefTable[methodDefTableIndex];
+                                }
                             }
                         }
                     }

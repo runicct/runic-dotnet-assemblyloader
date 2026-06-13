@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Runic.Dotnet.Assembly" Version="1.0.11" />
+    <PackageReference Include="Runic.Dotnet.Assembly" Version="1.0.18" />
     <PackageReference Include="Runic.FileFormats.PortableExecutable" Version="1.0.2" />
   </ItemGroup>
 
