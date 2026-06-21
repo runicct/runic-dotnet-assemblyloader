@@ -247,7 +247,11 @@ namespace Runic.Dotnet
                 }
                 return ReadNullTerminatedString(@string.RelativeVirtualAddress);
             }
-
+            /// <summary>
+            /// Read a Unicode string that is prefixed with its length as a compressed integer. This is used for strings in the #US heap.
+            /// </summary>
+            /// <param name="rva">The relative virtual address of the string.</param>
+            /// <returns>The decoded string.</returns>
 #if NET6_0_OR_GREATER
             public string? ReadLengthPrefixedString(uint rva)
 #else
@@ -257,9 +261,13 @@ namespace Runic.Dotnet
                 uint offset = 0;
                 uint length = ReadCompressedIntegerAtRelativeVirtualAddress(rva, out offset);
                 byte[] str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
-                return System.Text.Encoding.UTF8.GetString(str);
+                return System.Text.Encoding.Unicode.GetString(str);
             }
-
+            /// <summary>
+            /// Read a UTF-8 encoded string that is null-terminated. This is used for strings in the #String heap.
+            /// </summary>
+            /// <param name="rva">The relative virtual address of the string.</param>
+            /// <returns>The decoded string.</returns>
 #if NET6_0_OR_GREATER
             public string? ReadNullTerminatedString(uint rva)
 #else
