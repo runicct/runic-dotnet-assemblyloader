@@ -260,7 +260,35 @@ namespace Runic.Dotnet
             {
                 uint offset = 0;
                 uint length = ReadCompressedIntegerAtRelativeVirtualAddress(rva, out offset);
+#if NET6_0_OR_GREATER
+                byte[]? str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
+#else
                 byte[] str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
+#endif
+                if (str == null) { return null; }
+                if ((length % 2) != 0) { return System.Text.Encoding.Unicode.GetString(str, 0, (int)(length - 1)); }
+                return System.Text.Encoding.Unicode.GetString(str);
+            }
+#if NET6_0_OR_GREATER
+            public string? ReadLengthPrefixedString(uint rva, out byte terminalByte)
+#else
+            public string ReadLengthPrefixedString(uint rva,  out byte terminalByte)
+#endif
+            {
+                uint offset = 0;
+                uint length = ReadCompressedIntegerAtRelativeVirtualAddress(rva, out offset);
+#if NET6_0_OR_GREATER
+                byte[]? str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
+#else
+                byte[] str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
+#endif
+                if (str == null) { terminalByte = 0; return null; }
+                if ((length % 2) != 0) 
+                {
+                    terminalByte = str[str.Length - 1];
+                    return System.Text.Encoding.Unicode.GetString(str, 0, (int)(length - 1));
+                }
+                terminalByte = 0;
                 return System.Text.Encoding.Unicode.GetString(str);
             }
             /// <summary>
