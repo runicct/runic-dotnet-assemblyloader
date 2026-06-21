@@ -206,11 +206,11 @@ namespace Runic.Dotnet
                                     }
                                 }
                             }
-                            if (stream.Name == "#US")
-                            {
-                                _USHeap = new Runic.Dotnet.Assembly.Heap.StringHeap(true, stream.RelativeVirtualAddress, stream.Size);
-                            }
                         }
+                    }
+                    else if (stream.Name == "#US")
+                    {
+                        _USHeap = new Runic.Dotnet.Assembly.Heap.StringHeap(true, stream.RelativeVirtualAddress, stream.Size);
                     }
                 }
                 _nativeEntryPointRva = 0;
@@ -234,7 +234,6 @@ namespace Runic.Dotnet
                     }
                 }
             }
-
 #if NET6_0_OR_GREATER
             public string? ReadString(Runic.Dotnet.Assembly.Heap.StringHeap.String? @string)
 #else
@@ -242,7 +241,32 @@ namespace Runic.Dotnet
 #endif
             {
                 if (@string == null) { return null; }
-                return _portableExecutable.ReadUTF8StringAtRelativeVirtualAddress(@string.RelativeVirtualAddress);
+                if (@string.Heap == _USHeap)
+                {
+                    return ReadLengthPrefixedString(@string.RelativeVirtualAddress);
+                }
+                return ReadNullTerminatedString(@string.RelativeVirtualAddress);
+            }
+
+#if NET6_0_OR_GREATER
+            public string? ReadLengthPrefixedString(uint rva)
+#else
+            public string ReadLengthPrefixedString(uint rva)
+#endif
+            {
+                uint offset = 0;
+                uint length = ReadCompressedIntegerAtRelativeVirtualAddress(rva, out offset);
+                byte[] str = _portableExecutable.ReadArrayAtRelativeVirtualAddress(rva + offset, length);
+                return System.Text.Encoding.UTF8.GetString(str);
+            }
+
+#if NET6_0_OR_GREATER
+            public string? ReadNullTerminatedString(uint rva)
+#else
+            public string ReadNullTerminatedString(uint rva)
+#endif
+            {
+                return _portableExecutable.ReadUTF8StringAtRelativeVirtualAddress(rva);
             }
             uint ReadCompressedIntegerAtRelativeVirtualAddress(uint relativeVirtualAddress, out uint offset)
             {
