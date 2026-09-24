@@ -35,6 +35,7 @@ namespace Runic.Dotnet
             public Runic.Dotnet.Assembly.Heap.StringHeap USHeap { get { return _USHeap; } }
 
             Runic.Dotnet.Assembly.MetadataTable[] _metadataTables;
+            public Runic.Dotnet.Assembly.MetadataTable[] MetadataTables { get { return _metadataTables; } }
 #if NET6_0_OR_GREATER
 
             Runic.Dotnet.Assembly.MetadataTable.MethodDefTable? _methodDefTable;
